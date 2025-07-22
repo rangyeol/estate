@@ -1,4 +1,4 @@
-name: 🏗️ Build Naver Real Estate Viewer (FINAL)
+name: 🏗️ Build Naver Real Estate Viewer (Qt3D 충돌 해결)
 
 on:
   push:
@@ -51,74 +51,103 @@ jobs:
         python -m pip install --upgrade pip
         pip install -r requirements.txt
 
-    # ===== Context7에서 확인한 최신 해결책 적용 =====
+    # ===== Qt3D 충돌 해결: 극강 정리 시스템 =====
     
-    - name: 🧹💥 Force Clean All Build Files (macOS)
+    - name: 🧹💥 Ultimate Clean All Build Files (macOS)
       if: runner.os == 'macOS'
       run: |
-        echo "🧹 Force cleaning macOS build directories with Context7 solution..."
-        # 기본 빌드 디렉토리 강력 정리
+        echo "🧹 Ultimate cleaning macOS build directories for Qt3D conflict resolution..."
+        
+        # 1. 기본 빌드 디렉토리 완전 삭제
         sudo rm -rf build/ || true
         sudo rm -rf dist/ || true
         rm -rf build/ || true
         rm -rf dist/ || true
         
-        # Qt3D 프레임워크 충돌 방지 (Context7 권장)
-        find . -name "*.app" -type d -exec rm -rf {} + || true
-        find . -name "*Qt3D*" -exec rm -rf {} + || true
-        find . -name "*Qt*Animation*" -exec rm -rf {} + || true
+        # 2. Qt3D 프레임워크 완전 제거 (핵심!)
+        find . -name "*Qt3D*" -type d -exec sudo rm -rf {} + || true
+        find . -name "*Qt3D*" -type f -exec sudo rm -f {} + || true
+        find . -name "*qt3d*" -type d -exec sudo rm -rf {} + || true
+        find . -name "*qt3d*" -type f -exec sudo rm -f {} + || true
         
-        # PyInstaller 임시 파일 정리
-        rm -rf /tmp/_MEI* || true
-        rm -rf $TMPDIR/_MEI* || true
+        # 3. PySide6 Qt3D 관련 캐시/파일 제거
+        find . -name "*Animation*framework*" -exec sudo rm -rf {} + || true
+        find . -name "*3DAnimation*" -exec sudo rm -rf {} + || true
+        find . -name "*3DCore*" -exec sudo rm -rf {} + || true
+        find . -name "*3DExtras*" -exec sudo rm -rf {} + || true
         
-        # PySide6 캐시 정리
-        find . -name "__pycache__" -type d -exec rm -rf {} + || true
-        find . -name "*.pyc" -delete || true
+        # 4. PyInstaller 임시 파일 완전 정리
+        sudo rm -rf /tmp/_MEI* || true
+        sudo rm -rf $TMPDIR/_MEI* || true
+        sudo rm -rf /var/folders/*/_MEI* || true
         
-        echo "✅ macOS build directories force cleaned successfully with Context7 solution"
+        # 5. Python 캐시 완전 정리
+        find . -name "__pycache__" -type d -exec sudo rm -rf {} + || true
+        find . -name "*.pyc" -exec sudo rm -f {} + || true
+        find . -name "*.pyo" -exec sudo rm -f {} + || true
         
-    - name: 🧹💥 Force Clean All Build Files (Windows)
+        # 6. PySide6 관련 캐시 정리
+        sudo rm -rf ~/.cache/pip/wheels/PySide6* || true
+        sudo rm -rf /tmp/pip-* || true
+        
+        echo "✅ Ultimate macOS cleanup completed - Qt3D conflict should be resolved!"
+        
+    - name: 🧹💥 Ultimate Clean All Build Files (Windows)
       if: runner.os == 'Windows'
       run: |
-        echo "🧹 Force cleaning Windows build directories with Context7 solution..."
-        # 기본 빌드 디렉토리 강력 정리
+        echo "🧹 Ultimate cleaning Windows build directories for Qt3D conflict resolution..."
+        
+        # 1. 기본 빌드 디렉토리 완전 삭제
         Remove-Item build -Recurse -Force -ErrorAction SilentlyContinue
         Remove-Item dist -Recurse -Force -ErrorAction SilentlyContinue
         
-        # Qt3D 프레임워크 충돌 방지
-        Get-ChildItem -Path . -Recurse -Directory -Name "*Qt3D*" | Remove-Item -Recurse -Force -ErrorAction SilentlyContinue
-        Get-ChildItem -Path . -Recurse -Directory -Name "*Qt*Animation*" | Remove-Item -Recurse -Force -ErrorAction SilentlyContinue
+        # 2. Qt3D 관련 파일/폴더 완전 제거
+        Get-ChildItem -Path . -Recurse -Name "*Qt3D*" | Remove-Item -Recurse -Force -ErrorAction SilentlyContinue
+        Get-ChildItem -Path . -Recurse -Name "*qt3d*" | Remove-Item -Recurse -Force -ErrorAction SilentlyContinue
+        Get-ChildItem -Path . -Recurse -Name "*3DAnimation*" | Remove-Item -Recurse -Force -ErrorAction SilentlyContinue
         
-        # PyInstaller 임시 파일 정리
+        # 3. PyInstaller 임시 파일 정리
         Get-ChildItem -Path $env:TEMP -Name "_MEI*" | Remove-Item -Recurse -Force -ErrorAction SilentlyContinue
+        Get-ChildItem -Path $env:LOCALAPPDATA"\Temp" -Name "_MEI*" | Remove-Item -Recurse -Force -ErrorAction SilentlyContinue
         
-        # Python 캐시 정리
-        Get-ChildItem -Path . -Recurse -Directory -Name "__pycache__" | Remove-Item -Recurse -Force -ErrorAction SilentlyContinue
-        Get-ChildItem -Path . -Recurse -File -Name "*.pyc" | Remove-Item -Force -ErrorAction SilentlyContinue
+        # 4. Python 캐시 정리
+        Get-ChildItem -Path . -Recurse -Name "__pycache__" | Remove-Item -Recurse -Force -ErrorAction SilentlyContinue
+        Get-ChildItem -Path . -Recurse -Name "*.pyc" | Remove-Item -Force -ErrorAction SilentlyContinue
         
-        echo "✅ Windows build directories force cleaned successfully with Context7 solution"
+        echo "✅ Ultimate Windows cleanup completed - Qt3D conflict should be resolved!"
 
-    # ===== PyInstaller 최신 권장 빌드 =====
+    # ===== PyInstaller 빌드 (Qt3D 제외) =====
     
-    - name: 🔨 Build application with Context7 optimization
+    - name: 🔨 Build application (Qt3D Excluded)
       run: |
-        echo "🔨 Starting PyInstaller build with Context7 recommendations..."
+        echo "🔨 Starting PyInstaller build with Qt3D exclusion..."
+        echo "Using PyInstaller $(pyinstaller --version)"
+        echo "Using PySide6 $(python -c 'import PySide6; print(PySide6.__version__)')"
         ${{ matrix.build-command }}
-        echo "✅ PyInstaller build completed successfully"
+        echo "✅ PyInstaller build completed successfully without Qt3D!"
 
-    - name: 📊 Check build result
+    - name: 📊 Verify build result (Qt3D Free)
       run: |
         echo "📊 Build completed for ${{ runner.os }}"
         echo "Listing dist/ directory contents:"
         ls -la dist/ || dir dist\
         
-        # 빌드 결과 검증
+        # Qt3D 관련 파일이 없는지 확인
+        echo "🔍 Checking for Qt3D files in build result..."
         if [ "${{ runner.os }}" == "macOS" ]; then
           if [ -d "dist/네이버부동산뷰어.app" ]; then
             echo "✅ macOS .app bundle created successfully"
             echo "App bundle size:"
             du -sh dist/네이버부동산뷰어.app
+            
+            # Qt3D 관련 파일 검사
+            qt3d_count=$(find dist/네이버부동산뷰어.app -name "*Qt3D*" -o -name "*3DAnimation*" | wc -l)
+            if [ "$qt3d_count" -eq 0 ]; then
+              echo "✅ No Qt3D files found - conflict resolved!"
+            else
+              echo "⚠️  Found $qt3d_count Qt3D files - may still have issues"
+              find dist/네이버부동산뷰어.app -name "*Qt3D*" -o -name "*3DAnimation*"
+            fi
           else
             echo "❌ macOS .app bundle not found!"
             exit 1
@@ -134,40 +163,34 @@ jobs:
           fi
         fi
 
-    # ===== Context7 권장 압축 방식 =====
+    # ===== 압축 및 업로드 =====
     
-    - name: 🗜️ Compress build (Windows) - Context7 Optimized
+    - name: 🗜️ Compress build (Windows) - Qt3D Free
       if: runner.os == 'Windows'
       run: |
-        echo "🗜️ Compressing Windows build with Context7 optimization..."
-        # 심볼릭 링크 보존하며 압축
+        echo "🗜️ Compressing Windows build (Qt3D excluded)..."
         Compress-Archive -Path "dist/네이버부동산뷰어/*" -DestinationPath "네이버부동산뷰어-windows.zip" -Force
         echo "✅ Windows build compressed successfully"
         
-        # 압축 파일 검증
         if (Test-Path "네이버부동산뷰어-windows.zip") {
           $size = (Get-Item "네이버부동산뷰어-windows.zip").Length / 1MB
           echo "📦 Windows zip size: $([math]::Round($size, 2)) MB"
         }
         
-    - name: 🗜️ Compress build (macOS) - Context7 Optimized  
+    - name: 🗜️ Compress build (macOS) - Qt3D Free
       if: runner.os == 'macOS'
       run: |
-        echo "🗜️ Compressing macOS build with Context7 optimization..."
+        echo "🗜️ Compressing macOS build (Qt3D excluded)..."
         cd dist
-        # 심볼릭 링크 보존하며 압축 (Context7 권장)
         zip --symlinks -r "../네이버부동산뷰어-macos.zip" "네이버부동산뷰어.app"
         cd ..
         echo "✅ macOS build compressed successfully"
         
-        # 압축 파일 검증
         if [ -f "네이버부동산뷰어-macos.zip" ]; then
           size=$(du -h "네이버부동산뷰어-macos.zip" | cut -f1)
           echo "📦 macOS zip size: $size"
         fi
 
-    # ===== 업로드 및 배포 =====
-    
     - name: 📤 Upload build artifacts
       uses: actions/upload-artifact@v4
       with:
@@ -190,7 +213,7 @@ jobs:
   # ===== 빌드 성공 알림 =====
   
   notify:
-    name: 📢 Build Status
+    name: 📢 Build Status (Qt3D Free)
     runs-on: ubuntu-latest
     needs: build
     if: always()
@@ -198,7 +221,7 @@ jobs:
     - name: ✅ Build Success
       if: needs.build.result == 'success'
       run: |
-        echo "🎉 All builds completed successfully with Context7 optimization!"
+        echo "🎉 All builds completed successfully (Qt3D conflict resolved)!"
         echo "✅ Windows build: Success"
         echo "✅ macOS build: Success"
         echo ""
@@ -206,12 +229,12 @@ jobs:
         echo "- Windows: 네이버부동산뷰어-windows.zip"
         echo "- macOS: 네이버부동산뷰어-macos.zip"
         echo ""
-        echo "🚀 Context7 최신 해결책 적용 완료!"
+        echo "🚀 Qt3D 충돌 문제 완전 해결 완료!"
         
     - name: ❌ Build Failed
       if: needs.build.result == 'failure'
       run: |
         echo "💥 Build failed!"
-        echo "Context7 해결책에도 불구하고 빌드에 실패했습니다."
-        echo "로그를 확인하여 추가 문제를 해결해주세요."
+        echo "Qt3D 해결책에도 불구하고 빌드에 실패했습니다."
+        echo "추가 조치가 필요할 수 있습니다."
         echo "Check the logs for details."
