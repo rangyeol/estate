@@ -1,4 +1,4 @@
-name: 🏗️ Build Naver Real Estate Viewer
+name: 🏗️ Build Naver Real Estate Viewer (FINAL)
 
 on:
   push:
@@ -51,46 +51,123 @@ jobs:
         python -m pip install --upgrade pip
         pip install -r requirements.txt
 
-    - name: 🧹 Clean previous build (macOS)
+    # ===== Context7에서 확인한 최신 해결책 적용 =====
+    
+    - name: 🧹💥 Force Clean All Build Files (macOS)
       if: runner.os == 'macOS'
       run: |
-        echo "Cleaning macOS build directories..."
-        rm -rf build/
-        rm -rf dist/
-        echo "macOS build directories cleaned successfully"
+        echo "🧹 Force cleaning macOS build directories with Context7 solution..."
+        # 기본 빌드 디렉토리 강력 정리
+        sudo rm -rf build/ || true
+        sudo rm -rf dist/ || true
+        rm -rf build/ || true
+        rm -rf dist/ || true
         
-    - name: 🧹 Clean previous build (Windows)
+        # Qt3D 프레임워크 충돌 방지 (Context7 권장)
+        find . -name "*.app" -type d -exec rm -rf {} + || true
+        find . -name "*Qt3D*" -exec rm -rf {} + || true
+        find . -name "*Qt*Animation*" -exec rm -rf {} + || true
+        
+        # PyInstaller 임시 파일 정리
+        rm -rf /tmp/_MEI* || true
+        rm -rf $TMPDIR/_MEI* || true
+        
+        # PySide6 캐시 정리
+        find . -name "__pycache__" -type d -exec rm -rf {} + || true
+        find . -name "*.pyc" -delete || true
+        
+        echo "✅ macOS build directories force cleaned successfully with Context7 solution"
+        
+    - name: 🧹💥 Force Clean All Build Files (Windows)
       if: runner.os == 'Windows'
       run: |
-        echo "Cleaning Windows build directories..."
-        if (Test-Path build) { Remove-Item build -Recurse -Force }
-        if (Test-Path dist) { Remove-Item dist -Recurse -Force }
-        echo "Windows build directories cleaned successfully"
+        echo "🧹 Force cleaning Windows build directories with Context7 solution..."
+        # 기본 빌드 디렉토리 강력 정리
+        Remove-Item build -Recurse -Force -ErrorAction SilentlyContinue
+        Remove-Item dist -Recurse -Force -ErrorAction SilentlyContinue
+        
+        # Qt3D 프레임워크 충돌 방지
+        Get-ChildItem -Path . -Recurse -Directory -Name "*Qt3D*" | Remove-Item -Recurse -Force -ErrorAction SilentlyContinue
+        Get-ChildItem -Path . -Recurse -Directory -Name "*Qt*Animation*" | Remove-Item -Recurse -Force -ErrorAction SilentlyContinue
+        
+        # PyInstaller 임시 파일 정리
+        Get-ChildItem -Path $env:TEMP -Name "_MEI*" | Remove-Item -Recurse -Force -ErrorAction SilentlyContinue
+        
+        # Python 캐시 정리
+        Get-ChildItem -Path . -Recurse -Directory -Name "__pycache__" | Remove-Item -Recurse -Force -ErrorAction SilentlyContinue
+        Get-ChildItem -Path . -Recurse -File -Name "*.pyc" | Remove-Item -Force -ErrorAction SilentlyContinue
+        
+        echo "✅ Windows build directories force cleaned successfully with Context7 solution"
 
-    - name: 🔨 Build application
-      run: ${{ matrix.build-command }}
+    # ===== PyInstaller 최신 권장 빌드 =====
+    
+    - name: 🔨 Build application with Context7 optimization
+      run: |
+        echo "🔨 Starting PyInstaller build with Context7 recommendations..."
+        ${{ matrix.build-command }}
+        echo "✅ PyInstaller build completed successfully"
 
     - name: 📊 Check build result
       run: |
-        echo "Build completed for ${{ runner.os }}"
-        ls -la dist/
+        echo "📊 Build completed for ${{ runner.os }}"
+        echo "Listing dist/ directory contents:"
+        ls -la dist/ || dir dist\
+        
+        # 빌드 결과 검증
+        if [ "${{ runner.os }}" == "macOS" ]; then
+          if [ -d "dist/네이버부동산뷰어.app" ]; then
+            echo "✅ macOS .app bundle created successfully"
+            echo "App bundle size:"
+            du -sh dist/네이버부동산뷰어.app
+          else
+            echo "❌ macOS .app bundle not found!"
+            exit 1
+          fi
+        elif [ "${{ runner.os }}" == "Windows" ]; then
+          if [ -d "dist/네이버부동산뷰어" ]; then
+            echo "✅ Windows executable directory created successfully"
+            echo "Executable directory size:"
+            du -sh dist/네이버부동산뷰어 2>/dev/null || echo "Size calculation not available"
+          else
+            echo "❌ Windows executable directory not found!"
+            exit 1
+          fi
+        fi
 
-    - name: 🗜️ Compress build (Windows)
+    # ===== Context7 권장 압축 방식 =====
+    
+    - name: 🗜️ Compress build (Windows) - Context7 Optimized
       if: runner.os == 'Windows'
       run: |
-        echo "Compressing Windows build..."
-        Compress-Archive -Path "dist/네이버부동산뷰어/*" -DestinationPath "네이버부동산뷰어-windows.zip"
-        echo "Windows build compressed successfully"
+        echo "🗜️ Compressing Windows build with Context7 optimization..."
+        # 심볼릭 링크 보존하며 압축
+        Compress-Archive -Path "dist/네이버부동산뷰어/*" -DestinationPath "네이버부동산뷰어-windows.zip" -Force
+        echo "✅ Windows build compressed successfully"
         
-    - name: 🗜️ Compress build (macOS)
+        # 압축 파일 검증
+        if (Test-Path "네이버부동산뷰어-windows.zip") {
+          $size = (Get-Item "네이버부동산뷰어-windows.zip").Length / 1MB
+          echo "📦 Windows zip size: $([math]::Round($size, 2)) MB"
+        }
+        
+    - name: 🗜️ Compress build (macOS) - Context7 Optimized  
       if: runner.os == 'macOS'
       run: |
-        echo "Compressing macOS build..."
+        echo "🗜️ Compressing macOS build with Context7 optimization..."
         cd dist
-        zip -r "../네이버부동산뷰어-macos.zip" "네이버부동산뷰어.app"
+        # 심볼릭 링크 보존하며 압축 (Context7 권장)
+        zip --symlinks -r "../네이버부동산뷰어-macos.zip" "네이버부동산뷰어.app"
         cd ..
-        echo "macOS build compressed successfully"
+        echo "✅ macOS build compressed successfully"
+        
+        # 압축 파일 검증
+        if [ -f "네이버부동산뷰어-macos.zip" ]; then
+          size=$(du -h "네이버부동산뷰어-macos.zip" | cut -f1)
+          echo "📦 macOS zip size: $size"
+        fi
 
+    # ===== 업로드 및 배포 =====
+    
     - name: 📤 Upload build artifacts
       uses: actions/upload-artifact@v4
       with:
@@ -110,7 +187,8 @@ jobs:
         asset_name: 네이버부동산뷰어-${{ runner.os == 'Windows' && 'windows' || 'macos' }}.zip
         asset_content_type: application/zip
 
-  # 빌드 성공 알림
+  # ===== 빌드 성공 알림 =====
+  
   notify:
     name: 📢 Build Status
     runs-on: ubuntu-latest
@@ -120,12 +198,20 @@ jobs:
     - name: ✅ Build Success
       if: needs.build.result == 'success'
       run: |
-        echo "🎉 All builds completed successfully!"
+        echo "🎉 All builds completed successfully with Context7 optimization!"
         echo "✅ Windows build: Success"
         echo "✅ macOS build: Success"
+        echo ""
+        echo "🔗 Download links:"
+        echo "- Windows: 네이버부동산뷰어-windows.zip"
+        echo "- macOS: 네이버부동산뷰어-macos.zip"
+        echo ""
+        echo "🚀 Context7 최신 해결책 적용 완료!"
         
     - name: ❌ Build Failed
       if: needs.build.result == 'failure'
       run: |
         echo "💥 Build failed!"
+        echo "Context7 해결책에도 불구하고 빌드에 실패했습니다."
+        echo "로그를 확인하여 추가 문제를 해결해주세요."
         echo "Check the logs for details."
