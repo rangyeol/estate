@@ -98,7 +98,7 @@ jobs:
     if: always()
     steps:
     - name: ✅ Build Success
-      if: needs.build.result == 'success
+      if: needs.build.result == 'success'
       run: |
         echo "🎉 All builds completed successfully!"
         echo "✅ Windows build: Success"
