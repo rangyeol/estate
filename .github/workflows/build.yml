@@ -125,40 +125,46 @@ jobs:
         ${{ matrix.build-command }}
         echo "✅ PyInstaller Onefile build completed successfully (Qt3D FREE)!"
 
-    - name: 📊 Verify build result (Onefile - Qt3D FREE)
+    - name: 📊 Verify build result (Windows) - Qt3D FREE
+      if: runner.os == 'Windows'
       run: |
-        echo "📊 Build verification for ${{ runner.os }} (Onefile Mode)"
+        echo "📊 Windows build verification (Onefile Mode)"
         echo "Listing dist/ directory contents:"
-        ls -la dist/ 2>/dev/null || dir dist\ 2>nul
+        dir dist\
         echo ""
         
-        # 빌드 결과 검증 (Onefile 모드에 맞게 수정)
-        if [ "${{ runner.os }}" == "macOS" ]; then
-          # macOS Onefile 모드: 단일 실행파일 생성
-          if [ -f "dist/네이버부동산뷰어" ]; then
-            echo "✅ macOS Onefile executable created successfully"
-            echo "📏 Executable size:"
-            ls -lh dist/네이버부동산뷰어
-            echo "🔍 Executable info:"
-            file dist/네이버부동산뷰어
-            
-            # Qt3D 관련 검사 (Onefile 내부는 확인 불가, 실행 테스트로 대체)
-            echo "✅ Qt3D framework conflict completely avoided (Onefile mode)!"
-            echo "🎯 No .app bundle = No Qt3D framework structure conflicts!"
-          else
-            echo "❌ macOS Onefile executable not found!"
-            echo "Expected: dist/네이버부동산뷰어"
-            exit 1
-          fi
-        elif [ "${{ runner.os }}" == "Windows" ]; then
-          if [ -d "dist/네이버부동산뷰어" ]; then
-            echo "✅ Windows executable directory created successfully"
-            echo "📏 Directory size:"
-            du -sh dist/네이버부동산뷰어 2>/dev/null || echo "Size calculation not available"
-          else
-            echo "❌ Windows executable directory not found!"
-            exit 1
-          fi
+        if (Test-Path "dist/네이버부동산뷰어") {
+          echo "✅ Windows executable directory created successfully"
+          echo "📏 Directory contents:"
+          Get-ChildItem "dist/네이버부동산뷰어" | Format-Table Name, Length
+        } else {
+          echo "❌ Windows executable directory not found!"
+          exit 1
+        }
+        
+    - name: 📊 Verify build result (macOS) - Onefile Qt3D FREE  
+      if: runner.os == 'macOS'
+      run: |
+        echo "📊 macOS build verification (Onefile Mode)"
+        echo "Listing dist/ directory contents:"
+        ls -la dist/
+        echo ""
+        
+        # macOS Onefile 모드: 단일 실행파일 생성
+        if [ -f "dist/네이버부동산뷰어" ]; then
+          echo "✅ macOS Onefile executable created successfully"
+          echo "📏 Executable size:"
+          ls -lh dist/네이버부동산뷰어
+          echo "🔍 Executable info:"
+          file dist/네이버부동산뷰어
+          
+          # Qt3D 관련 검사 (Onefile 내부는 확인 불가, 실행 테스트로 대체)
+          echo "✅ Qt3D framework conflict completely avoided (Onefile mode)!"
+          echo "🎯 No .app bundle = No Qt3D framework structure conflicts!"
+        else
+          echo "❌ macOS Onefile executable not found!"
+          echo "Expected: dist/네이버부동산뷰어"
+          exit 1
         fi
 
     # ===== 압축 및 업로드 (Onefile 모드 대응) =====
