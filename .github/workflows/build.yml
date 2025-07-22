@@ -244,4 +244,4 @@ jobs:
         echo "💥 Build failed!"
         echo "Onefile 모드에서도 빌드에 실패했습니다."
         echo "추가 문제 해결이 필요할 수 있습니다."
-        echo "Check the logs for details."
+        echo "Check the logs for details." 
