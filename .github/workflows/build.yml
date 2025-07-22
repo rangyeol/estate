@@ -54,14 +54,18 @@ jobs:
     - name: 🧹 Clean previous build (macOS)
       if: runner.os == 'macOS'
       run: |
+        echo "Cleaning macOS build directories..."
         rm -rf build/
         rm -rf dist/
+        echo "macOS build directories cleaned successfully"
         
     - name: 🧹 Clean previous build (Windows)
       if: runner.os == 'Windows'
       run: |
+        echo "Cleaning Windows build directories..."
         if (Test-Path build) { Remove-Item build -Recurse -Force }
         if (Test-Path dist) { Remove-Item dist -Recurse -Force }
+        echo "Windows build directories cleaned successfully"
 
     - name: 🔨 Build application
       run: ${{ matrix.build-command }}
@@ -74,14 +78,18 @@ jobs:
     - name: 🗜️ Compress build (Windows)
       if: runner.os == 'Windows'
       run: |
+        echo "Compressing Windows build..."
         Compress-Archive -Path "dist/네이버부동산뷰어/*" -DestinationPath "네이버부동산뷰어-windows.zip"
+        echo "Windows build compressed successfully"
         
     - name: 🗜️ Compress build (macOS)
       if: runner.os == 'macOS'
       run: |
+        echo "Compressing macOS build..."
         cd dist
         zip -r "../네이버부동산뷰어-macos.zip" "네이버부동산뷰어.app"
         cd ..
+        echo "macOS build compressed successfully"
 
     - name: 📤 Upload build artifacts
       uses: actions/upload-artifact@v4
