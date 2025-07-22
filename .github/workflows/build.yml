@@ -118,7 +118,7 @@ jobs:
         echo "🔨 Starting PyInstaller Onefile build (Qt3D completely avoided)..."
         echo "📊 Build Info:"
         echo "  - PyInstaller: $(pyinstaller --version)"
-        python -c "try: import PySide6; print('  - PySide6: ' + PySide6.__version__); except Exception: print('  - PySide6: Not detected')"
+        echo "  - PySide6: Built with requirements.txt version"
         echo "  - Build Mode: Onefile (Qt3D framework conflict avoidance)"
         echo ""
         echo "🚀 Starting build..."
